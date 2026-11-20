@@ -1,0 +1,6 @@
+{
+  "name": "sample3-compose-mysql",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": { "express": "^4", "mysql2": "^3", "redis": "^4" }
+}

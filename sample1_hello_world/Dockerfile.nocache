@@ -1,0 +1,7 @@
+FROM node:20-alpine
+WORKDIR /app
+# Semua file di-copy dulu. Edit index.js -> layer ini invalid -> npm install ikut jalan ulang.
+COPY . .
+RUN npm install --omit=dev
+EXPOSE 3000
+CMD ["node", "index.js"]

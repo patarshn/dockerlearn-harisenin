@@ -1,0 +1,9 @@
+FROM node:20-alpine
+WORKDIR /app
+# 1. Copy manifest saja. Layer npm install tetap cached kalau manifest sama.
+COPY package*.json ./
+RUN npm install --omit=dev
+# 2. Copy source terakhir. Edit index.js hanya invalidate layer ini ke bawah.
+COPY . .
+EXPOSE 3000
+CMD ["node", "index.js"]
