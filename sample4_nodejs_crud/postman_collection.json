@@ -1,0 +1,636 @@
+{
+  "info": {
+    "_postman_id": "f3b2c1a0-4c5d-4e6f-8a9b-0c1d2e3f4a5b",
+    "name": "Sample 4 - CRUD User + Login",
+    "description": "Collection siap pakai untuk API Sample 4 (Express + MySQL).\n\nUrutan yang disarankan:\n1. Health\n2. Login Admin (token admin otomatis disimpan)\n3. Register User (email unik otomatis)\n4. Login User (token user otomatis disimpan)\n5. Request lain di folder Auth\n6. Folder Admin Users\n\nToken disimpan di collection variable, jadi tidak perlu copy-paste manual.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00. Health",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Cek status API dan koneksi database. Harus 200 dengan db=up."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01. Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set('userEmail', 'budi.' + Date.now() + '@example.com');"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('userId', pm.response.json().data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budi Santoso\",\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Membuat akun role user. Email dibuat unik otomatis setiap run. ID user disimpan ke variable userId."
+          },
+          "response": []
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.collectionVariables.set('adminAccessToken', data.accessToken);",
+                  "  pm.collectionVariables.set('adminRefreshToken', data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login admin demo. Token admin otomatis disimpan untuk request di folder Admin Users."
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.collectionVariables.set('userAccessToken', data.accessToken);",
+                  "  pm.collectionVariables.set('userRefreshToken', data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login dengan user hasil Register. Jalankan Register User terlebih dahulu."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{userAccessToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Profil user yang sedang login."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{userAccessToken}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budi S.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Ubah nama dan/atau email sendiri. Minimal satu field."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.collectionVariables.set('userAccessToken', data.accessToken);",
+                  "  pm.collectionVariables.set('userRefreshToken', data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{userRefreshToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Rotasi refresh token. Token lama langsung revoked; jika dipakai lagi akan menghasilkan 401 TOKEN_REUSED."
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password (opsional)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 204) {",
+                  "  pm.collectionVariables.set('userPassword', 'Rahasia456');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{userAccessToken}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{userPassword}}\",\n  \"newPassword\": \"Rahasia456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/me/password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me", "password"]
+            },
+            "description": "Mengubah password user dan mencabut semua refresh token. Jalankan setelah request Refresh. Setelah berhasil, variable userPassword diubah ke Rahasia456."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 204) {",
+                  "  pm.collectionVariables.set('userRefreshToken', '');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{userRefreshToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Mencabut refresh token user. Respons 204 (idempotent)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02. Admin Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminAccessToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=10&sort=created_at&order=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "budi", "description": "Cari di nama/email", "disabled": true },
+                { "key": "role", "value": "user", "description": "admin | user", "disabled": true },
+                { "key": "isActive", "value": "true", "description": "true | false", "disabled": true },
+                { "key": "sort", "value": "created_at", "description": "id | name | email | created_at" },
+                { "key": "order", "value": "desc", "description": "asc | desc" }
+              ]
+            },
+            "description": "List user dengan pagination. Aktifkan (uncheck disabled) query search/role/isActive sesuai kebutuhan."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User (registered)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminAccessToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Detail user hasil Register User. Jalankan Register terlebih dahulu."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set('createdUserEmail', 'siti.' + Date.now() + '@example.com');"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('createdUserId', pm.response.json().data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminAccessToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Siti\",\n  \"email\": \"{{createdUserEmail}}\",\n  \"password\": \"Rahasia123\",\n  \"role\": \"user\",\n  \"isActive\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Buat user sebagai admin. Email unik otomatis; ID disimpan ke variable createdUserId."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User (created)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminAccessToken}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Siti Aminah\",\n  \"isActive\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{createdUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{createdUserId}}"]
+            },
+            "description": "Update user hasil Create User. Untuk reset password, tambahkan field password."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User (created)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminAccessToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{createdUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{createdUserId}}"]
+            },
+            "description": "Hapus user hasil Create User. Respons 204."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Registered User (cleanup)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminAccessToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Hapus user hasil Register User untuk bersih-bersih. Respons 204."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03. Error Examples",
+      "item": [
+        {
+          "name": "401 Tanpa Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('harus 401', () => pm.response.to.have.status(401));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Akses endpoint admin tanpa Authorization header."
+          },
+          "response": []
+        },
+        {
+          "name": "403 Role User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('harus 403', () => pm.response.to.have.status(403));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{userAccessToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "User role user mencoba endpoint admin. Jalankan Login User dulu."
+          },
+          "response": []
+        },
+        {
+          "name": "409 Email Duplikat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('harus 409', () => pm.response.to.have.status(409));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin Lagi\",\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"Rahasia123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register memakai email admin yang sudah ada."
+          },
+          "response": []
+        },
+        {
+          "name": "422 Validasi Gagal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('harus 422', () => pm.response.to.have.status(422));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"X\",\n  \"email\": \"bukan-email\",\n  \"password\": \"123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Contoh error validasi: nama terlalu pendek, email tidak valid, password lemah."
+          },
+          "response": []
+        },
+        {
+          "name": "404 User Tidak Ada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('harus 404', () => pm.response.to.have.status(404));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{adminAccessToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "999999"]
+            },
+            "description": "Detail user dengan ID yang tidak ada."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api/v1" },
+    { "key": "adminEmail", "value": "admin@example.com" },
+    { "key": "adminPassword", "value": "Admin#12345" },
+    { "key": "userEmail", "value": "budi@example.com" },
+    { "key": "userPassword", "value": "Rahasia123" },
+    { "key": "userId", "value": "" },
+    { "key": "createdUserId", "value": "" },
+    { "key": "createdUserEmail", "value": "" },
+    { "key": "adminAccessToken", "value": "" },
+    { "key": "adminRefreshToken", "value": "" },
+    { "key": "userAccessToken", "value": "" },
+    { "key": "userRefreshToken", "value": "" }
+  ]
+}
